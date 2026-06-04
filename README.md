@@ -1,10 +1,10 @@
-# Discord Bot with Extensions (Cogs)
+# Discord Bot Called Xbot
 
-This is a modular Discord bot built with `discord.py`. It uses "Cogs" to organize commands into different extensions.
+This is a Discord bot built with `discord.py`. It uses "Cogs" to organize commands into different extensions.
 
 ## Features
 
-- Modular architecture using Cogs.
+- Architecture using Cogs.
 - Simple setup with environment variables.
 - Example commands: `!ping`, `!getout`.
 
