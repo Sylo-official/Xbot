@@ -1,8 +1,10 @@
 import os
 import asyncio
+import threading
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+from flask import Flask
 
 # Load environment variables
 load_dotenv()
@@ -10,7 +12,24 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 
 print("TOKEN FOUND:", TOKEN is not None)
 
-# Bot setup
+# -------------------
+# Flask setup (health check)
+# -------------------
+app = Flask(__name__)
+
+@app.route("/health")
+def health():
+    return "ok", 200
+
+def run_web():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
+
+threading.Thread(target=run_web).start()
+
+# -------------------
+# Discord bot setup
+# -------------------
 intents = discord.Intents.default()
 intents.message_content = True
 
@@ -35,6 +54,20 @@ async def load_extensions():
 
 @bot.event
 async def on_ready():
+    print(f"Logged in as {bot.user} (ID: {bot.user.id})")
+    print("------")
+
+async def main():
+    if not TOKEN:
+        print("Error: No DISCORD_TOKEN found.")
+        return
+
+    async with bot:
+        await load_extensions()
+        await bot.start(TOKEN)
+
+if __name__ == "__main__":
+    asyncio.run(main())async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
     print("------")
 
