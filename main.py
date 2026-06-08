@@ -6,14 +6,16 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from flask import Flask
 
-# Load environment variables
+# -------------------
+# Load env vars
+# -------------------
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 print("TOKEN FOUND:", TOKEN is not None)
 
 # -------------------
-# Flask setup (health check)
+# Flask (UptimeRobot health check)
 # -------------------
 app = Flask(__name__)
 
@@ -39,7 +41,7 @@ bot = commands.Bot(
 )
 
 async def load_extensions():
-    """Load all extensions from the cogs folder."""
+    """Load all cogs."""
     if not os.path.isdir("./cogs"):
         print("Error: cogs folder not found.")
         return
@@ -57,20 +59,9 @@ async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
     print("------")
 
-async def main():
-    if not TOKEN:
-        print("Error: No DISCORD_TOKEN found.")
-        return
-
-    async with bot:
-        await load_extensions()
-        await bot.start(TOKEN)
-
-if __name__ == "__main__":
-    asyncio.run(main())async def on_ready():
-    print(f"Logged in as {bot.user} (ID: {bot.user.id})")
-    print("------")
-
+# -------------------
+# Main runner
+# -------------------
 async def main():
     if not TOKEN:
         print("Error: No DISCORD_TOKEN found.")
