@@ -2,89 +2,50 @@ import discord
 from discord.ext import commands
 import random
 import asyncio
-import time
 
 # =========================
-# GLOBAL STATE (WORLD SAVE)
+# GLOBAL STATE
 # =========================
 
 balances = {}
 bank = {}
-
 stocks = {}
 portfolio = {}
-
 user_jobs = {}
-cooldowns = {}
-
 loans = {}
-property_owned = {}
-
-inventory = {}
-
 laws = {}
-revolution_votes = set()
 
-government = {
-    "leader": None,
-    "tax_rate": 5
-}
+government = {"leader": None, "tax_rate": 5}
 
 economy_index = 100.0
-inflation = 1.0
-
-# =========================
-# CONFIG
-# =========================
-
-WORK_COOLDOWN = 60
 
 
 # =========================
-# WORLD ENGINE (AUTO SIMULATION)
+# WORLD ENGINE
 # =========================
 
 async def world_loop():
-    global economy_index, inflation
+    global economy_index
 
     while True:
         await asyncio.sleep(1)
 
-        # 📈 STOCK MARKET SIM
         for stock in stocks.values():
-            stock["price"] = max(
-                0.01,
-                stock["price"] + random.uniform(-0.10, 0.32)
-            )
+            stock["price"] = max(0.01, stock["price"] + random.uniform(-0.10, 0.32))
 
-            # 💀 crash
-            if random.randint(1, 400) == 1:
-                stock["price"] *= random.uniform(0.3, 0.7)
+            if random.randint(1, 350) == 1:
+                stock["price"] *= random.uniform(0.3, 0.8)
 
-        # 📊 ECONOMY INDEX
-        economy_index += random.uniform(-1.5, 2.0)
+        economy_index += random.uniform(-1.2, 1.8)
 
-        # 📉 INFLATION SYSTEM
-        inflation *= random.uniform(0.999, 1.002)
-
-        # 🧾 TAX SYSTEM (AUTO GOV)
         tax = government["tax_rate"] / 100
 
         for uid in list(balances.keys()):
-            balances[uid] = max(
-                0,
-                int(balances.get(uid, 0) - balances.get(uid, 0) * tax)
-            )
-
-        # 🧠 INSIDER EVENT
-        if random.randint(1, 800) == 1:
-            mult = random.uniform(0.5, 1.8)
-            for s in stocks:
-                stocks[s]["price"] *= mult
+            balances[uid] = max(0, int(balances.get(uid, 0) * (1 - tax)))
 
 
 # =========================
-# LOAN SYSTEM
+# LOANS
 # =========================
 
 async def loan_loop():
@@ -106,49 +67,68 @@ class Economy(commands.Cog):
         bot.loop.create_task(loan_loop())
 
     # =====================
-    # BALANCE / BANK
+    # BALANCE
     # =====================
-
     @commands.command()
     async def balance(self, ctx):
-        await ctx.send(f"💰 ${balances.get(ctx.author.id, 0)}")
+        embed = discord.Embed(
+            title="💰 Balance",
+            description=f"${balances.get(ctx.author.id, 0)}",
+            color=discord.Color.green()
+        )
+        await ctx.send(embed=embed)
 
+    # =====================
+    # BANK
+    # =====================
     @commands.command()
     async def bank(self, ctx):
-        await ctx.send(f"🏦 ${bank.get(ctx.author.id, 0)}")
+        embed = discord.Embed(
+            title="🏦 Bank",
+            description=f"${bank.get(ctx.author.id, 0)}",
+            color=discord.Color.blue()
+        )
+        await ctx.send(embed=embed)
 
     @commands.command()
     async def deposit(self, ctx, amount: int):
         uid = ctx.author.id
 
         if balances.get(uid, 0) < amount:
-            return await ctx.send("❌ not enough cash")
+            return await ctx.send("❌ Not enough cash")
 
         balances[uid] -= amount
         bank[uid] = bank.get(uid, 0) + amount
 
-        await ctx.send("🏦 deposited")
+        await ctx.send(embed=discord.Embed(
+            title="🏦 Deposited",
+            description=f"+${amount}",
+            color=discord.Color.blue()
+        ))
 
     @commands.command()
     async def withdraw(self, ctx, amount: int):
         uid = ctx.author.id
 
         if bank.get(uid, 0) < amount:
-            return await ctx.send("❌ not enough bank")
+            return await ctx.send("❌ Not enough bank")
 
         bank[uid] -= amount
         balances[uid] = balances.get(uid, 0) + amount
 
-        await ctx.send("💸 withdrawn")
+        await ctx.send(embed=discord.Embed(
+            title="💸 Withdrawn",
+            description=f"+${amount}",
+            color=discord.Color.green()
+        ))
 
     # =====================
-    # JOB SYSTEM
+    # JOBS
     # =====================
-
     jobs = {
         "miner": (25, 100),
         "trader": (50, 200),
-        "developer": (100, 300),
+        "dev": (100, 300),
         "robber": (0, 400)
     }
 
@@ -157,17 +137,22 @@ class Economy(commands.Cog):
         name = name.lower()
 
         if name not in self.jobs:
-            return await ctx.send("❌ miner, trader, developer, robber")
+            return await ctx.send("❌ miner / trader / dev / robber")
 
         user_jobs[ctx.author.id] = name
-        await ctx.send(f"👷 Job set: {name}")
+
+        await ctx.send(embed=discord.Embed(
+            title="👷 Job Set",
+            description=f"You are now a **{name}**",
+            color=discord.Color.orange()
+        ))
 
     @commands.command()
     async def work(self, ctx):
         uid = ctx.author.id
 
         if uid not in user_jobs:
-            return await ctx.send("💀 no job")
+            return await ctx.send("💀 No job")
 
         job = user_jobs[uid]
         low, high = self.jobs[job]
@@ -175,158 +160,124 @@ class Economy(commands.Cog):
         earn = random.randint(low, high)
         balances[uid] = balances.get(uid, 0) + earn
 
-        await ctx.send(f"💼 +${earn}")
+        await ctx.send(embed=discord.Embed(
+            title="💼 Work Done",
+            description=f"+${earn} as {job}",
+            color=discord.Color.teal()
+        ))
 
     # =====================
-    # CASINO (SPIN)
+    # CASINO
     # =====================
-
     @commands.command()
     async def spin(self, ctx, amount: int):
         uid = ctx.author.id
 
         if balances.get(uid, 0) < amount:
-            return await ctx.send("❌ no money")
+            return await ctx.send("❌ No money")
 
         balances[uid] -= amount
+
         roll = random.randint(1, 100)
 
         if roll == 100:
             win = amount * 10
+            result = "JACKPOT 🎉"
         elif roll > 85:
             win = int(amount * 2.5)
+            result = "BIG WIN 🔥"
         elif roll > 55:
             win = int(amount * 1.3)
+            result = "WIN 👍"
         else:
             win = 0
+            result = "LOSS 💀"
 
         balances[uid] += win
 
-        if win == 0:
-            return await ctx.send(f"🎰 lost -${amount}")
-
-        await ctx.send(f"🎰 won +${win}")
+        await ctx.send(embed=discord.Embed(
+            title="🎰 Spin Result",
+            description=result,
+            color=discord.Color.gold()
+        ).add_field(name="Won", value=f"${win}", inline=True)
+         .add_field(name="Bet", value=f"${amount}", inline=True))
 
     # =====================
-    # STOCK MARKET
+    # STOCKS
     # =====================
-
     @commands.command()
     async def addstocks(self, ctx, name: str, price: float):
         stocks[name] = {"price": price}
-        await ctx.send(f"📈 stock added {name}")
+
+        await ctx.send(embed=discord.Embed(
+            title="📈 Stock Added",
+            description=f"{name} @ ${price}",
+            color=discord.Color.green()
+        ))
 
     @commands.command()
     async def stocks(self, ctx):
-        msg = "📊 MARKET:\n"
+        embed = discord.Embed(title="📈 Market", color=discord.Color.gold())
+
+        if not stocks:
+            embed.description = "No stocks yet"
+            return await ctx.send(embed=embed)
+
         for n, d in stocks.items():
-            msg += f"{n}: ${round(d['price'],2)}\n"
-        await ctx.send(msg)
+            embed.add_field(name=n, value=f"${round(d['price'],2)}", inline=False)
+
+        await ctx.send(embed=embed)
 
     @commands.command()
     async def invest(self, ctx, name: str, shares: int):
         uid = ctx.author.id
 
         if name not in stocks:
-            return await ctx.send("❌ no stock")
+            return await ctx.send("❌ No stock")
 
         cost = stocks[name]["price"] * shares
 
         if balances.get(uid, 0) < cost:
-            return await ctx.send("❌ no money")
+            return await ctx.send("❌ No money")
 
         balances[uid] -= cost
         portfolio.setdefault(uid, {})
         portfolio[uid][name] = portfolio[uid].get(name, 0) + shares
 
-        await ctx.send("📈 invested")
+        await ctx.send(embed=discord.Embed(
+            title="📈 Invested",
+            description=f"{shares} shares of {name}",
+            color=discord.Color.green()
+        ))
 
     @commands.command()
     async def sell(self, ctx, name: str, shares: int):
         uid = ctx.author.id
 
         if portfolio.get(uid, {}).get(name, 0) < shares:
-            return await ctx.send("❌ not enough")
+            return await ctx.send("❌ Not enough shares")
 
         gain = stocks[name]["price"] * shares
-
         balances[uid] += gain
+
         portfolio[uid][name] -= shares
 
-        await ctx.send(f"💸 sold +${round(gain,2)}")
-
-    @commands.command()
-    async def portfolio(self, ctx):
-        data = portfolio.get(ctx.author.id, {})
-        if not data:
-            return await ctx.send("empty")
-
-        msg = "📊 portfolio:\n"
-        for n, s in data.items():
-            msg += f"{n}: {s}\n"
-
-        await ctx.send(msg)
-
-    # =====================
-    # GOVERNMENT
-    # =====================
-
-    @commands.command()
-    async def becomegov(self, ctx):
-        if government["leader"]:
-            return await ctx.send("❌ exists")
-
-        government["leader"] = ctx.author.id
-        await ctx.send("👑 gov set")
-
-    @commands.command()
-    async def settax(self, ctx, rate: int):
-        if ctx.author.id != government["leader"]:
-            return await ctx.send("❌ not gov")
-
-        government["tax_rate"] = rate
-        await ctx.send("🧾 tax updated")
-
-    @commands.command()
-    async def addlaw(self, ctx, *, law: str):
-        if ctx.author.id != government["leader"]:
-            return await ctx.send("❌ not gov")
-
-        laws[len(laws)+1] = law
-        await ctx.send("⚖️ law added")
-
-    @commands.command()
-    async def laws(self, ctx):
-        if not laws:
-            return await ctx.send("none")
-
-        msg = "\n".join([f"{i}. {l}" for i, l in laws.items()])
-        await ctx.send(msg)
-
-    # =====================
-    # REVOLUTION
-    # =====================
-
-    @commands.command()
-    async def revolt(self, ctx):
-        revolution_votes.add(ctx.author.id)
-
-        if len(revolution_votes) >= 3:
-            government["leader"] = None
-            revolution_votes.clear()
-            await ctx.send("🔥 GOV OVERTHROWN")
-        else:
-            await ctx.send("🪧 vote added")
+        await ctx.send(embed=discord.Embed(
+            title="💸 Sold",
+            description=f"+${round(gain,2)}",
+            color=discord.Color.blue()
+        ))
 
     # =====================
     # ECONOMY INFO
     # =====================
-
     @commands.command()
     async def economy(self, ctx):
-        await ctx.send(
-            f"📊 index: {round(economy_index,2)} | inflation: {round(inflation,3)}"
-        )
+        await ctx.send(embed=discord.Embed(
+            title="📊 Economy Index",
+            description=f"{round(economy_index,2)}",
+            color=discord.Color.blurple()
+        ))
 
 
 async def setup(bot):
