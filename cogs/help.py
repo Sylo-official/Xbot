@@ -13,20 +13,32 @@ class Help(commands.Cog):
         # =========================
         if module is None:
             embed = discord.Embed(
-                title="📚 Economy Bot Help",
-                description="Use `!help <module>` for details",
+                title="📚 Economy World Help",
+                description="Use `!help <module>`",
                 color=discord.Color.blurple()
             )
 
             embed.add_field(
                 name="💰 Economy",
-                value="balance, work, deposit, withdraw, bank",
+                value="balance, bank, deposit (amount), withdraw (amount), economy",
+                inline=False
+            )
+
+            embed.add_field(
+                name="👷 Jobs",
+                value="job (name), work",
                 inline=False
             )
 
             embed.add_field(
                 name="📈 Stocks",
-                value="stocks, addstocks, invest (stock) (shares), sell (stock) (shares), portfolio",
+                value="stocks, addstocks (name price), invest (stock shares), sell (stock shares), portfolio",
+                inline=False
+            )
+
+            embed.add_field(
+                name="🎰 Casino",
+                value="spin (amount)",
                 inline=False
             )
 
@@ -37,20 +49,8 @@ class Help(commands.Cog):
             )
 
             embed.add_field(
-                name="👷 Jobs",
-                value="job (name)",
-                inline=False
-            )
-
-            embed.add_field(
                 name="🧨 Chaos",
                 value="revolt",
-                inline=False
-            )
-
-            embed.add_field(
-                name="📊 Info",
-                value="economy",
                 inline=False
             )
 
@@ -58,42 +58,77 @@ class Help(commands.Cog):
             return await ctx.send(embed=embed)
 
         # =========================
-        # ECONOMY
+        # ECONOMY MODULE
         # =========================
         if module.lower() == "economy":
             embed = discord.Embed(
-                title="💰 Economy Commands",
+                title="💰 Economy System",
                 color=discord.Color.green()
             )
 
             embed.add_field(
                 name="!balance",
-                value="Check your money\nUsage: `!balance`",
+                value="Check money\nUsage: `!balance`",
                 inline=False
             )
 
             embed.add_field(
-                name="!work",
-                value="Earn money from job\nUsage: `!work`",
+                name="!bank",
+                value="Check bank balance\nUsage: `!bank`",
                 inline=False
             )
 
             embed.add_field(
                 name="!deposit",
-                value="Put money in bank\nUsage: `!deposit 100`",
+                value="Deposit cash\nUsage: `!deposit 100`",
                 inline=False
             )
 
             embed.add_field(
                 name="!withdraw",
-                value="Take money from bank\nUsage: `!withdraw 100`",
+                value="Withdraw cash\nUsage: `!withdraw 100`",
+                inline=False
+            )
+
+            embed.add_field(
+                name="!economy",
+                value="View world economy index\nUsage: `!economy`",
                 inline=False
             )
 
             return await ctx.send(embed=embed)
 
         # =========================
-        # STOCKS
+        # JOBS MODULE
+        # =========================
+        if module.lower() == "jobs":
+            embed = discord.Embed(
+                title="👷 Job System",
+                color=discord.Color.teal()
+            )
+
+            embed.add_field(
+                name="!job",
+                value="Choose a job\nUsage: `!job miner`",
+                inline=False
+            )
+
+            embed.add_field(
+                name="!work",
+                value="Work your job for money\nUsage: `!work`",
+                inline=False
+            )
+
+            embed.add_field(
+                name="Available Jobs",
+                value="miner, trader, developer, robber",
+                inline=False
+            )
+
+            return await ctx.send(embed=embed)
+
+        # =========================
+        # STOCKS MODULE
         # =========================
         if module.lower() == "stocks":
             embed = discord.Embed(
@@ -103,13 +138,13 @@ class Help(commands.Cog):
 
             embed.add_field(
                 name="!stocks",
-                value="View market prices\nUsage: `!stocks`",
+                value="View market\nUsage: `!stocks`",
                 inline=False
             )
 
             embed.add_field(
                 name="!addstocks",
-                value="Create stock (admin)\nUsage: `!addstocks Tesla 100`",
+                value="Create stock\nUsage: `!addstocks Tesla 100`",
                 inline=False
             )
 
@@ -127,14 +162,31 @@ class Help(commands.Cog):
 
             embed.add_field(
                 name="!portfolio",
-                value="Your holdings\nUsage: `!portfolio`",
+                value="Your investments\nUsage: `!portfolio`",
                 inline=False
             )
 
             return await ctx.send(embed=embed)
 
         # =========================
-        # GOVERNMENT
+        # CASINO MODULE
+        # =========================
+        if module.lower() == "casino":
+            embed = discord.Embed(
+                title="🎰 Casino System",
+                color=discord.Color.dark_gold()
+            )
+
+            embed.add_field(
+                name="!spin",
+                value="Gamble money\nUsage: `!spin 100`",
+                inline=False
+            )
+
+            return await ctx.send(embed=embed)
+
+        # =========================
+        # GOVERNMENT MODULE
         # =========================
         if module.lower() == "government":
             embed = discord.Embed(
@@ -169,63 +221,26 @@ class Help(commands.Cog):
             return await ctx.send(embed=embed)
 
         # =========================
-        # JOBS
-        # =========================
-        if module.lower() == "jobs":
-            embed = discord.Embed(
-                title="👷 Jobs System",
-                color=discord.Color.teal()
-            )
-
-            embed.add_field(
-                name="!job",
-                value="Choose job\nUsage: `!job miner`",
-                inline=False
-            )
-
-            embed.add_field(
-                name="Jobs List",
-                value="miner, trader, developer, robber",
-                inline=False
-            )
-
-            return await ctx.send(embed=embed)
-
-        # =========================
-        # CHAOS
+        # CHAOS MODULE
         # =========================
         if module.lower() == "chaos":
             embed = discord.Embed(
                 title="🧨 Chaos System",
-                color=discord.Color.dark_purple()
+                color=discord.Color.purple()
             )
 
             embed.add_field(
                 name="!revolt",
-                value="Start revolution\nUsage: `!revolt`",
+                value="Start revolution vote\nUsage: `!revolt`",
                 inline=False
             )
 
             return await ctx.send(embed=embed)
 
         # =========================
-        # INFO
+        # INVALID MODULE
         # =========================
-        if module.lower() == "info":
-            embed = discord.Embed(
-                title="📊 Info Commands",
-                color=discord.Color.blurple()
-            )
-
-            embed.add_field(
-                name="!economy",
-                value="View economy index\nUsage: `!economy`",
-                inline=False
-            )
-
-            return await ctx.send(embed=embed)
-
-        await ctx.send("❌ Module not found. Try: economy, stocks, government, jobs, chaos, info")
+        await ctx.send("❌ Module not found. Try: economy, jobs, stocks, casino, government, chaos")
 
 
 async def setup(bot):
