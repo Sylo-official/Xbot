@@ -9,10 +9,6 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 
 print("TOKEN FOUND:", TOKEN is not None)
 
-# =========================
-# BOT SETUP
-# =========================
-
 intents = discord.Intents.default()
 intents.message_content = True
 
@@ -21,13 +17,7 @@ bot = commands.Bot(
     intents=intents
 )
 
-# 💀 IMPORTANT FIX (THIS SOLVES YOUR ERROR)
 bot.remove_command("help")
-
-
-# =========================
-# LOAD EXTENSIONS
-# =========================
 
 async def load_extensions():
     if not os.path.isdir("./cogs"):
@@ -42,20 +32,10 @@ async def load_extensions():
             except Exception as e:
                 print(f"Failed to load {file}: {e}")
 
-
-# =========================
-# EVENTS
-# =========================
-
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
     print("------")
-
-
-# =========================
-# MAIN
-# =========================
 
 async def main():
     if not TOKEN:
